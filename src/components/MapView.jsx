@@ -77,8 +77,6 @@ export default function MapView() {
       ))}
 
       {Object.entries(positions)
-        // if you didn’t filter in handlePos, you could filter here instead:
-        // .filter(([_, pos]) => pos.email !== ADMIN_EMAIL)
         .map(([uid, { lat, lng, ts, email }]) => (
           <Marker key={uid} position={[lat, lng]} icon={customIcon}>
             <Popup>
