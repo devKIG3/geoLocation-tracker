@@ -9,12 +9,7 @@ export default function UserDashboard() {
   const [pos, setPos] = useState({ lat: 36.75, lng: 3.04, ts: Date.now() });
   const mapRef = useRef();
   const nav = useNavigate();
-  const customIcon = new L.Icon({
-    iconUrl: myPinUrl,
-    iconSize: [50, 50], // adjust to your image’s dimensions
-    iconAnchor: [25, 50], // point of the icon which corresponds to marker’s lat/lng
-    popupAnchor: [0, -50], // where popups will open relative to the icon
-  });
+
   useEffect(() => {
     const user = auth.currentUser;
 
@@ -72,7 +67,7 @@ export default function UserDashboard() {
           className="flex-grow-1"
         >
           <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-          <Marker position={[pos.lat, pos.lng]} icon={customIcon}>
+          <Marker position={[pos.lat, pos.lng]}>
             <Popup>
               <div>
                 <strong>Your Position</strong>

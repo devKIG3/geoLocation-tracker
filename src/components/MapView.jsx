@@ -9,6 +9,16 @@ import {
   useMapEvents,
 } from "react-leaflet";
 import L from "leaflet";
+// Fix default marker icon not showing in production (e.g., Vercel)
+import iconRetinaUrl from "leaflet/dist/images/marker-icon-2x.png";
+import iconUrl from "leaflet/dist/images/marker-icon.png";
+import iconShadowUrl from "leaflet/dist/images/marker-shadow.png";
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl,
+  iconUrl,
+  shadowUrl: iconShadowUrl,
+});
+
 import { db } from "../firebase";
 import "leaflet/dist/leaflet.css";
 import { toast, ToastContainer } from "react-toastify";
@@ -74,10 +84,15 @@ export default function MapView() {
     const handlePos = (snap) => {
       const { lat, lng, ts } = snap.val() || {};
       const uid = snap.key;
+      // Always update positions
       setPositions((prev) => ({ ...prev, [uid]: { lat, lng, ts } }));
 
       const profile = usersRef.current[uid] || {};
+      // Skip admins and entries without email
       if (profile.role === "admin" || !profile.email) return;
+
+      // If no zones defined, skip toast behavior
+      if (Object.keys(zones).length === 0) return;
 
       // Check if user is inside any zone
       let insideAny = false;
@@ -85,9 +100,7 @@ export default function MapView() {
         const dist = L.latLng(lat, lng).distanceTo(
           L.latLng(zone.center.lat, zone.center.lng)
         );
-        if (dist <= zone.radius) {
-          insideAny = true;
-        }
+        if (dist <= zone.radius) insideAny = true;
       });
 
       // If user is outside ALL zones, maybe toast
