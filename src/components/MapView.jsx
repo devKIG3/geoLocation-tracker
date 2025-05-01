@@ -10,11 +10,9 @@ import {
 } from "react-leaflet";
 import L from "leaflet";
 // Fix default marker icon not showing in production (e.g., Vercel)
-import iconRetinaUrl from "leaflet/dist/images/marker-icon-2x.png";
 import iconUrl from "leaflet/dist/images/marker-icon.png";
 import iconShadowUrl from "leaflet/dist/images/marker-shadow.png";
 L.Icon.Default.mergeOptions({
-  iconRetinaUrl,
   iconUrl,
   shadowUrl: iconShadowUrl,
 });
