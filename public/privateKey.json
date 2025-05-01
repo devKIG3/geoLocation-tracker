@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "geolocation-6475b",
+  "private_key_id": "65ecb8e3e2fad90b3b443d5e2ae01ae49ff7a89d",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDwle4Kz6CXGPWY\nbgYjDGI6+cF1Bk7hfF13pGPAoxSR8XS8kixTjJIoZDXFDTR/kjqHGEFwuxNd173b\nqoKey+yR3wyD84kBUxsLiKTs2AccZ3pLBK8B1ov8A+pspS9RllZdretgiA3tHqwU\nFeo/c8souBdii0xxXkdL82za5FbjSXm73bkZTyoB+fA4cCzVNcuW+ZEOM/H2w7Zc\nVdvg4vX2wq9zNiFiyJ+jnZxA2PhjJDkM5MI8aN7I/LUMzWJGVlPzQQn4j0R8lXxI\ne9Lss1MrDmw3mcOB5nEkuLA/OVaLgrgYuI3c6gdMjvWklk5C2sPWmwqnNWbcOr3y\n7U82RBQDAgMBAAECggEACQigL8C8bMqvoiHI0jUV/9U+pI3FlXrtft9p2CMSKSln\nXZNMMyDtS135P4/E37YWbi8ved5Ua6rSWAwO1ovys0bW+fdsNrlaTnRljk0i9eKU\nJCVQtaF1j9N30HeNZM4Kf9RW08Dta5tsu7Os9Y/8BL3mMY7od733WwyQvaa4SoAg\n/N/63nrLf4TzAPsflpTn9VcAa6023s/wLUPeb6mDHh5Fa46GbrPFZ4UxrvP1iWpC\njv7Weux0jwwZU7JLzwYvYVzjHVKjh+Gc3tzgT2YPO2gLXdMtnTrhumXsQFrpVfrL\n0JPVo3VIhsO2UzdwSXD3XgyHVxeKSwX1l5QRrW/jaQKBgQD6KEWlLztFT3ZIzoDq\n0q/coxs1Nnlg6l6dONsmCxuLlDRp1HQ92uSbODuH8VuRcgSGOcWK+dxegVCctmV8\nEBIATv9RfYgWWO6M6UkrblicB6SD2ghMI5+S50q580De3f3bLHygZ3heNIaak0ap\ng6XtcHLILYTVkTcU3/6AnR/BeQKBgQD2NG1vU3o+X3yT2JvsO7kK5MnWeav67j8G\nQNztm/Ga751IbfSsfiSKEUQHON2qWVSv5xJe5x0EhNe7N6tqAHMQOa9e0dlnrtir\nddVWwVQUHB7FD5xPHkgWDrjHVUOpQmOll5Ku7HrDxcWyr3pzkhVIy6qe281g4L0r\nEpYug1c+WwKBgCUMVdQy/Io1TIVX4AvnDBiXJ25oFO3fiAes5ffqaTfwyRprVpPa\nmUTLvTVS74bI5hai87izbImqiS/Ma5dGIgRdrr544vC8VwgTfLyr6P+iuiC058mu\n9PEixBRqDE91fSU6n3J6IH+DM/Qsn6h3UNmrb7Rp2WRvz0KOMfkGTC+xAoGAebXl\nO5ma3ua5YSU9v4Sur1H27Y3slPneMisyjEwBHkTCDiI9SGB7k72BUcis3B+ZG/Qx\nQrUhxTAerbCRjq92Mlkx9r/qp7Tp66kus9qSw/Y6x9Q1w28G19CjS/c8oZnuRNgv\nbUX+UnWci/7vm95lozz7tdiXKQMwwPBJSekn4e0CgYEAitO7oXoKWAHbgMkKKc5s\nrmzepHCRM/pa7AeGcbToFPvmBCnuQgABnqG0eGluxTVqrG9/G0gcr9ZyfLCrE9IU\n1SSYd82cE5QCo71vTA/TllKTnzi7AxINTQ8IRl3+BveoT/iowR0WQsi61FGLmd3q\nlcY2chIA8Us/VFBLWbb9dAw=\n-----END PRIVATE KEY-----\n",
+  "client_email": "firebase-adminsdk-fbsvc@geolocation-6475b.iam.gserviceaccount.com",
+  "client_id": "105985787723315361829",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-fbsvc%40geolocation-6475b.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
