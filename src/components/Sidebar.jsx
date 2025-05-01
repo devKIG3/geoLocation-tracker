@@ -1,29 +1,30 @@
 // src/components/Sidebar.jsx
 import React, { useEffect, useState } from "react";
 import { db } from "../firebase";
-
-const ACTIVE_WINDOW_MS = 5 * 60 * 1000; // 5 minutes
+import L from "leaflet";
 
 export default function Sidebar() {
   const [users, setUsers] = useState({});
   const [positions, setPositions] = useState({});
+  const [zones, setZones] = useState({});
 
+  // Fetch profiles and zones
   useEffect(() => {
-    // 1) Fetch all user profiles once
     const usersRef = db.ref("users");
-    usersRef.once("value", (snap) => {
-      setUsers(snap.val() || {});
-    });
+    usersRef.once("value", (snap) => setUsers(snap.val() || {}));
 
-    // 2) Subscribe to position child events
+    const zonesRef = db.ref("zones");
+    zonesRef.on("value", (snap) => setZones(snap.val() || {}));
+    return () => zonesRef.off();
+  }, []);
+
+  // Subscribe to positions
+  useEffect(() => {
     const posRef = db.ref("positions");
 
     const handleAddOrChange = (snap) => {
       const { lat, lng, ts } = snap.val() || {};
-      setPositions((prev) => ({
-        ...prev,
-        [snap.key]: { lat, lng, ts },
-      }));
+      setPositions((prev) => ({ ...prev, [snap.key]: { lat, lng, ts } }));
     };
 
     const handleRemove = (snap) => {
@@ -37,30 +38,39 @@ export default function Sidebar() {
     posRef.on("child_added", handleAddOrChange);
     posRef.on("child_changed", handleAddOrChange);
     posRef.on("child_removed", handleRemove);
-
     return () => {
       posRef.off("child_added", handleAddOrChange);
       posRef.off("child_changed", handleAddOrChange);
       posRef.off("child_removed", handleRemove);
     };
   }, []);
-  console.log(positions);
-  // 3) Build and filter entries
+
+  // Build entries with outside flag
   const entries = Object.entries(positions)
     .map(([uid, pos]) => {
       const profile = users[uid] || {};
+      // must have email and not be admin
+      if (!profile.email || profile.role === "admin") return null;
+
+      // check if inside any zone
+      const inside = Object.values(zones).some((zone) => {
+        const dist = L.latLng(pos.lat, pos.lng).distanceTo(
+          L.latLng(zone.center.lat, zone.center.lng)
+        );
+        return dist <= zone.radius;
+      });
+
       return {
         uid,
         email: profile.email,
-        role: profile.role,
-        ...pos,
+        lat: pos.lat,
+        lng: pos.lng,
+        ts: pos.ts,
+        outside: !inside,
       };
     })
-    // 4) Keep admins always, others only if recent
-    .filter(({ role, ts }) =>
-      role === "admin" ? true : Date.now() - ts <= ACTIVE_WINDOW_MS
-    )
-    // 5) Sort newest first (admins will be interleaved by ts)
+    .filter(Boolean)
+    // sort by timestamp desc
     .sort((a, b) => b.ts - a.ts);
 
   return (
@@ -72,25 +82,22 @@ export default function Sidebar() {
         className="list-group list-group-flush overflow-auto"
         style={{ maxHeight: "calc(100vh - 56px)" }}
       >
-        {entries.map(({ uid, email, lat, lng, ts, role }) => (
-          <li key={uid} className="list-group-item">
-            <strong>
-              {email || uid}{" "}
-              {role === "admin" && (
-                <span className="badge bg-secondary">admin</span>
-              )}
-            </strong>
-            <br />
-            Lat: {lat.toFixed(5)}, Lng: {lng.toFixed(5)}
-            <br />
+        {entries.map(({ uid, email, lat, lng, ts, outside }) => (
+          <li
+            key={uid}
+            className={`list-group-item d-flex flex-column ${
+              outside ? "bg-danger text-white" : ""
+            }`}
+          >
+            <strong>{email}</strong>
+            <small>
+              Lat: {lat.toFixed(5)}, Lng: {lng.toFixed(5)}
+            </small>
             <small>{new Date(ts).toLocaleTimeString()}</small>
           </li>
         ))}
-
         {entries.length === 0 && (
-          <li className="list-group-item text-muted">
-            No active users in the last 5 minutes.
-          </li>
+          <li className="list-group-item text-muted">No active users.</li>
         )}
       </ul>
     </div>
