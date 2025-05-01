@@ -45,6 +45,9 @@ export default function Login() {
             onChange={(e) => setPass(e.target.value)}
           />
         </div>
+        <button className="btn btn-primary w-100" onClick={handleLogin}>
+          Login
+        </button>
         <div className="mt-3 text-center">
           you dont have an account ? <Link to="/signup">Sign Up</Link>
         </div>
