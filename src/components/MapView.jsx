@@ -4,9 +4,14 @@ import { MapContainer, TileLayer, Circle, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import { db } from "../firebase";
 import "leaflet/dist/leaflet.css";
-
-const ADMIN_EMAIL = "admin@example.com";  // ← set to your admin’s email
-
+import myPinUrl from "../assets/icon.png"; // adjust the path to your icon
+const ADMIN_EMAIL = "admin@example.com"; // ← set to your admin’s email
+const customIcon = new L.Icon({
+  iconUrl: myPinUrl,
+  iconSize: [50, 50], // adjust to your image’s dimensions
+  iconAnchor: [25, 50], // point of the icon which corresponds to marker’s lat/lng
+  popupAnchor: [0, -50], // where popups will open relative to the icon
+});
 export default function MapView() {
   const [zones, setZones] = useState({});
   const [positions, setPositions] = useState({});
@@ -17,12 +22,12 @@ export default function MapView() {
 
   // Subscribe to positions
   useEffect(() => {
-    const posRef   = db.ref("positions");
+    const posRef = db.ref("positions");
     const notifRef = db.ref("notifications");
 
     const handlePos = (snap) => {
       const { lat, lng, ts, email } = snap.val() || {};
-      if (!email || email === ADMIN_EMAIL) return;     // ← skip admin
+      if (!email || email === ADMIN_EMAIL) return; // ← skip admin
 
       // store full payload, including email
       setPositions((prev) => ({
@@ -41,11 +46,11 @@ export default function MapView() {
       });
     };
 
-    posRef.on("child_added",   handlePos);
+    posRef.on("child_added", handlePos);
     posRef.on("child_changed", handlePos);
     posRef.on("child_removed", handleRemove);
     return () => {
-      posRef.off("child_added",   handlePos);
+      posRef.off("child_added", handlePos);
       posRef.off("child_changed", handlePos);
       posRef.off("child_removed", handleRemove);
     };
@@ -75,7 +80,7 @@ export default function MapView() {
         // if you didn’t filter in handlePos, you could filter here instead:
         // .filter(([_, pos]) => pos.email !== ADMIN_EMAIL)
         .map(([uid, { lat, lng, ts, email }]) => (
-          <Marker key={uid} position={[lat, lng]}>
+          <Marker key={uid} position={[lat, lng]} icon={customIcon}>
             <Popup>
               <strong>{email}</strong>
               <br />
