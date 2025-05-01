@@ -5,46 +5,35 @@ import L from "leaflet";
 import { db } from "../firebase";
 import "leaflet/dist/leaflet.css";
 
+const ADMIN_EMAIL = "admin@example.com"; // ← set to your admin’s email
+
 export default function MapView() {
   const [zones, setZones] = useState({});
   const [positions, setPositions] = useState({});
   const zonesRefContainer = useRef({});
   const mapRef = useRef(null);
 
-  // Subscribe to zones
-  useEffect(() => {
-    const zonesRef = db.ref("zones");
-    zonesRef.on("value", (snap) => {
-      const z = snap.val() || {};
-      setZones(z);
-      zonesRefContainer.current = z;
-    });
-    return () => zonesRef.off();
-  }, []);
+  // … zones subscription stays the same …
 
-  // Subscribe to position child events (add/change/remove)
+  // Subscribe to positions
   useEffect(() => {
     const posRef = db.ref("positions");
     const notifRef = db.ref("notifications");
 
     const handlePos = (snap) => {
-      const { lat, lng, ts } = snap.val() || {};
-      // Update or add marker
-      setPositions((prev) => ({ ...prev, [snap.key]: { lat, lng, ts } }));
+      const { lat, lng, ts, email } = snap.val() || {};
+      if (!email || email === ADMIN_EMAIL) return; // ← skip admin
 
-      // Check zone exit
-      Object.entries(zonesRefContainer.current).forEach(([zoneId, zone]) => {
-        const dist = L.latLng(lat, lng).distanceTo(
-          L.latLng(zone.center.lat, zone.center.lng)
-        );
-        if (dist > zone.radius) {
-          notifRef.push({ userId: snap.key, zoneId, ts: Date.now() });
-        }
-      });
+      // store full payload, including email
+      setPositions((prev) => ({
+        ...prev,
+        [snap.key]: { lat, lng, ts, email },
+      }));
+
+      // … your zone-exit logic …
     };
 
     const handleRemove = (snap) => {
-      // Remove marker
       setPositions((prev) => {
         const next = { ...prev };
         delete next[snap.key];
@@ -55,7 +44,6 @@ export default function MapView() {
     posRef.on("child_added", handlePos);
     posRef.on("child_changed", handlePos);
     posRef.on("child_removed", handleRemove);
-
     return () => {
       posRef.off("child_added", handlePos);
       posRef.off("child_changed", handlePos);
@@ -63,29 +51,7 @@ export default function MapView() {
     };
   }, []);
 
-  // Listen for notifications
-  useEffect(() => {
-    const notifRef = db.ref("notifications");
-    const handleNotif = (snap) => {
-      const { userId, zoneId, ts } = snap.val();
-      alert(
-        `🚨 User ${userId} left zone ${zoneId} at ${new Date(
-          ts
-        ).toLocaleTimeString()}`
-      );
-    };
-    notifRef.on("child_added", handleNotif);
-    return () => notifRef.off("child_added", handleNotif);
-  }, []);
-
-  // Optional: log connection status
-  useEffect(() => {
-    const connRef = db.ref(".info/connected");
-    connRef.on("value", (snap) => {
-      console.log("Firebase connected:", snap.val());
-    });
-    return () => connRef.off();
-  }, []);
+  // … notifications & connection effects stay the same …
 
   return (
     <MapContainer
@@ -96,28 +62,29 @@ export default function MapView() {
     >
       <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
 
-      {/* Draw each zone as a red circle */}
-      {Object.values(zones).map((zone, idx) => (
+      {Object.values(zones).map((zone, i) => (
         <Circle
-          key={idx}
+          key={i}
           center={[zone.center.lat, zone.center.lng]}
           radius={zone.radius}
           pathOptions={{ color: "red", fillOpacity: 0.2 }}
         />
       ))}
 
-      {/* Draw each user's marker */}
-      {Object.entries(positions).map(([uid, { lat, lng, ts }]) => (
-        <Marker key={uid} position={[lat, lng]}>
-          <Popup>
-            <strong>{uid}</strong>
-            <br />
-            Lat: {lat.toFixed(5)}, Lng: {lng.toFixed(5)}
-            <br />
-            <small>{new Date(ts).toLocaleTimeString()}</small>
-          </Popup>
-        </Marker>
-      ))}
+      {Object.entries(positions)
+        // if you didn’t filter in handlePos, you could filter here instead:
+        // .filter(([_, pos]) => pos.email !== ADMIN_EMAIL)
+        .map(([uid, { lat, lng, ts, email }]) => (
+          <Marker key={uid} position={[lat, lng]}>
+            <Popup>
+              <strong>{email}</strong>
+              <br />
+              Lat: {lat.toFixed(5)}, Lng: {lng.toFixed(5)}
+              <br />
+              <small>{new Date(ts).toLocaleTimeString()}</small>
+            </Popup>
+          </Marker>
+        ))}
     </MapContainer>
   );
 }
