@@ -21,7 +21,6 @@ export default function UserDashboard() {
     });
 
     // Start writing your geolocation
-    console.log(user.email);
     const watcher = navigator.geolocation.watchPosition(
       (p) => {
         const lat = p.coords.latitude;
