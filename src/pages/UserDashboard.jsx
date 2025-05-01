@@ -4,7 +4,7 @@ import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import { auth, db } from "../firebase";
 import { useNavigate } from "react-router-dom";
-import SessionTracker from "../components/SessionTracker";
+import SessionTracker from "../components/sessionTracker";
 import "leaflet/dist/leaflet.css";
 
 // Ensure default marker icon loads in production
