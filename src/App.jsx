@@ -1,7 +1,7 @@
 import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import PrivateRoute from "./PrivateRoute";
-import Login           from "./pages/Login";
+import Login           from "./pages/login";
 import SignUp          from "./pages/SignUp";          // ← import it
 import UserDashboard   from "./pages/UserDashboard";
 import AdminDashboard  from "./pages/adminDashboard";
