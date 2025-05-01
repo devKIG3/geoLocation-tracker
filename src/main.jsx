@@ -5,6 +5,9 @@ import { BrowserRouter } from "react-router-dom";
 import { auth } from "./firebase";
 import App from "./App";
 import "bootstrap/dist/css/bootstrap.min.css";
+// in src/index.js or App.js (wherever your app bootstraps)
+import "leaflet/dist/leaflet.css";
+
 import "./index.css";
 
 function Root() {

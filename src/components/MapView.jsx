@@ -5,7 +5,7 @@ import L from "leaflet";
 import { db } from "../firebase";
 import "leaflet/dist/leaflet.css";
 
-const ADMIN_EMAIL = "admin@example.com"; // ← set to your admin’s email
+const ADMIN_EMAIL = "admin@example.com";  // ← set to your admin’s email
 
 export default function MapView() {
   const [zones, setZones] = useState({});
@@ -17,12 +17,12 @@ export default function MapView() {
 
   // Subscribe to positions
   useEffect(() => {
-    const posRef = db.ref("positions");
+    const posRef   = db.ref("positions");
     const notifRef = db.ref("notifications");
 
     const handlePos = (snap) => {
       const { lat, lng, ts, email } = snap.val() || {};
-      if (!email || email === ADMIN_EMAIL) return; // ← skip admin
+      if (!email || email === ADMIN_EMAIL) return;     // ← skip admin
 
       // store full payload, including email
       setPositions((prev) => ({
@@ -41,11 +41,11 @@ export default function MapView() {
       });
     };
 
-    posRef.on("child_added", handlePos);
+    posRef.on("child_added",   handlePos);
     posRef.on("child_changed", handlePos);
     posRef.on("child_removed", handleRemove);
     return () => {
-      posRef.off("child_added", handlePos);
+      posRef.off("child_added",   handlePos);
       posRef.off("child_changed", handlePos);
       posRef.off("child_removed", handleRemove);
     };
