@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { auth, db } from "../firebase";
 import { useNavigate } from "react-router-dom";
-
+import { Link } from "react-router-dom";
 export default function Login() {
   const [email, setEmail] = useState("");
   const [pass, setPass] = useState("");
@@ -27,7 +27,6 @@ export default function Login() {
         style={{ width: "100%", maxWidth: 400 }}
       >
         <h3 className="card-title text-center mb-3">Sign In</h3>
-
         <div className="mb-3">
           <label className="form-label">Email</label>
           <input
@@ -37,7 +36,6 @@ export default function Login() {
             onChange={(e) => setEmail(e.target.value)}
           />
         </div>
-
         <div className="mb-3">
           <label className="form-label">Password</label>
           <input
@@ -47,11 +45,9 @@ export default function Login() {
             onChange={(e) => setPass(e.target.value)}
           />
         </div>
-
-        <button className="btn btn-primary w-100" onClick={handleLogin}>
-          Login
-        </button>
-
+        <div className="mt-3 text-center">
+          you dont have an account ? <Link to="/signup">Sign Up</Link>
+        </div>
         {msg && <div className="mt-3 text-center text-danger">{msg}</div>}
       </div>
     </div>
