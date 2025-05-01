@@ -3,7 +3,7 @@ import { auth } from "../firebase";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import MapView from "../components/MapView";
-import SessionTracker from "../components/sessionTracker";
+import SessionTracker from "../components/SessionTracker";
 export default function AdminDashboard() {
   const nav = useNavigate();
   return (
