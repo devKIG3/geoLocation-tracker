@@ -50,7 +50,7 @@ export default function Sidebar() {
     .map(([uid, pos]) => {
       const profile = users[uid] || {};
       // must have email and not be admin
-      if (!positions.email || profile.role === "admin") return null;
+      if (profile.role === "admin") return null;
       // check if inside any zone
       const inside = Object.values(zones).some((zone) => {
         const dist = L.latLng(pos.lat, pos.lng).distanceTo(
