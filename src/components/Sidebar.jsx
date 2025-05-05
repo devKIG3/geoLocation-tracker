@@ -50,12 +50,10 @@ export default function Sidebar() {
     const gpsRef = db.ref("GPS");
     gpsRef.on("value", (snap) => {
       const data = snap.val();
-      console.log(data);
       if (data?.Latitude != null && data?.Longitude != null) {
-        setGpsDevice({
-          lat: parseFloat(data.Latitude),
-          lng: parseFloat(data.Longitude),
-        });
+        const lat = parseFloat(data.Latitude);
+        const lng = parseFloat(data.Longitude);
+        setGpsDevice({ lat, lng });
       } else {
         setGpsDevice(null);
       }
@@ -63,11 +61,18 @@ export default function Sidebar() {
     return () => db.ref("GPS").off();
   }, []);
 
-  // Build regular tracked entries
-  const entries = Object.entries(positions)
+  // Combine tracked positions + GPS
+  const combinedPositions = {
+    ...positions,
+    ...(gpsDevice ? { gps_device: gpsDevice } : {}),
+  };
+
+  // Build entries
+  const entries = Object.entries(combinedPositions)
     .map(([uid, pos]) => {
       const profile = users[uid] || {};
-      if (profile.role === "admin") return null;
+      // Skip admins, but allow gps_device
+      if (uid !== "gps_device" && profile.role === "admin") return null;
 
       const hasZones = Object.keys(zones).length > 0;
       let isOutside = false;
@@ -83,14 +88,14 @@ export default function Sidebar() {
 
       return {
         uid,
-        email: profile.email || "Unknown User",
+        email: uid === "gps_device" ? "ISRA" : profile.email || "Unknown User",
         lat: pos.lat,
         lng: pos.lng,
         outside: hasZones ? isOutside : false,
       };
     })
     .filter(Boolean);
-  console.log("Tracked Users:", gpsDevice);
+
   return (
     <div className="border-end" style={{ width: 250 }}>
       <div className="p-3 bg-light">
@@ -100,27 +105,6 @@ export default function Sidebar() {
         className="list-group list-group-flush overflow-auto"
         style={{ maxHeight: "calc(100vh - 56px)" }}
       >
-        {/* GPS Device Entry */}
-        {gpsDevice && (
-          <li
-            className="list-group-item d-flex flex-column bg-info text-white"
-            style={{ cursor: "pointer" }}
-            onClick={() =>
-              setFocusedUser({
-                uid: "ISRA",
-                lat: gpsDevice.lat,
-                lng: gpsDevice.lng,
-              })
-            }
-          >
-            <strong>ISRA</strong>
-            <small>
-              Lat: {gpsDevice.lat.toFixed(5)}, Lng: {gpsDevice.lng.toFixed(5)}
-            </small>
-          </li>
-        )}
-
-        {/* Dynamic users from /positions */}
         {entries.map(({ uid, email, lat, lng, outside }) => (
           <li
             key={uid}
@@ -141,7 +125,7 @@ export default function Sidebar() {
           </li>
         ))}
 
-        {entries.length === 0 && !gpsDevice && (
+        {entries.length === 0 && (
           <li className="list-group-item text-muted">No tracked users.</li>
         )}
       </ul>

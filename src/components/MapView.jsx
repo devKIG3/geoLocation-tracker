@@ -74,36 +74,44 @@ export default function MapView() {
 
   useEffect(() => {
     const posRef = db.ref("positions");
+    const gpsRef = db.ref("GPS");
 
+    // Helper: Common zone check for any user
+    const handleZoneCheck = (uid, lat, lng) => {
+      const profile = usersRef.current[uid] || {};
+      if (profile.role === "admin" || !profile.email) return;
+      if (Object.keys(zones).length === 0) return;
+
+      const isInside = Object.values(zones).some((zone) => {
+        const dist = L.latLng(lat, lng).distanceTo(
+          L.latLng(zone.center.lat, zone.center.lng)
+        );
+        return dist <= zone.radius;
+      });
+
+      if (!isInside) {
+        const now = Date.now();
+        const last = lastToastRef.current[uid] || 0;
+        if (now - last > 30000) {
+          toast.warning(
+            `🚨 ${
+              profile.email === "gps.device@tracker.local" ? "ISRA" : profile.email
+            } is outside all zones`
+          );
+          lastToastRef.current[uid] = now;
+          notifRef.current.push({ userId: uid, ts: now });
+        }
+      }
+    };
+
+    // Firebase: Handle user positions
     const handlePos = (snap) => {
       const { lat, lng } = snap.val() || {};
       const uid = snap.key;
       if (lat == null || lng == null) return;
 
       setPositions((prev) => ({ ...prev, [uid]: { lat, lng } }));
-
-      const profile = usersRef.current[uid] || {};
-      if (profile.role === "admin" || !profile.email) return;
-
-      if (Object.keys(zones).length === 0) return;
-
-      let insideAny = false;
-      Object.values(zones).forEach((zone) => {
-        const dist = L.latLng(lat, lng).distanceTo(
-          L.latLng(zone.center.lat, zone.center.lng)
-        );
-        if (dist <= zone.radius) insideAny = true;
-      });
-
-      if (!insideAny) {
-        const now = Date.now();
-        const last = lastToastRef.current[uid] || 0;
-        if (now - last > 30000) {
-          toast.warning(`🚨 ${profile.email} is outside all zones`);
-          lastToastRef.current[uid] = now;
-          notifRef.current.push({ userId: uid, ts: now });
-        }
-      }
+      handleZoneCheck(uid, lat, lng);
     };
 
     const handleRemove = (snap) => {
@@ -114,14 +122,42 @@ export default function MapView() {
       });
     };
 
+    // Firebase: Handle GPS device like a user
+    const handleGPS = (snap) => {
+      const data = snap.val();
+      if (!data?.Latitude || !data?.Longitude) return;
+
+      const lat = parseFloat(data.Latitude);
+      const lng = parseFloat(data.Longitude);
+      const uid = "gps_device";
+
+      setPositions((prev) => ({
+        ...prev,
+        [uid]: { lat, lng },
+      }));
+
+      if (!usersRef.current[uid]) {
+        usersRef.current[uid] = {
+          email: "gps.device@tracker.local",
+          role: "user",
+        };
+      }
+
+      handleZoneCheck(uid, lat, lng);
+    };
+
+    // Listeners
     posRef.on("child_added", handlePos);
     posRef.on("child_changed", handlePos);
     posRef.on("child_removed", handleRemove);
+    gpsRef.on("value", handleGPS);
 
+    // Cleanup
     return () => {
       posRef.off("child_added", handlePos);
       posRef.off("child_changed", handlePos);
       posRef.off("child_removed", handleRemove);
+      gpsRef.off("value", handleGPS);
     };
   }, [zones]);
 
