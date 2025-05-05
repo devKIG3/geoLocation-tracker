@@ -107,7 +107,7 @@ export default function Sidebar() {
             style={{ cursor: "pointer" }}
             onClick={() =>
               setFocusedUser({
-                uid: "gps_device",
+                uid: "isra",
                 lat: gpsDevice.lat,
                 lng: gpsDevice.lng,
               })
