@@ -194,7 +194,7 @@ export default function MapView() {
           .map(([uid, { lat, lng }]) => (
             <Marker key={uid} position={[lat, lng]}>
               <Popup>
-                <strong>{usersRef.current[uid]?.email || "isra"}</strong>
+                <strong>{usersRef.current[uid]?.email || "ISRA"}</strong>
                 <br />
                 Lat: {lat.toFixed(5)}, Lng: {lng.toFixed(5)}
               </Popup>
