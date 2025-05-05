@@ -1,30 +1,30 @@
-// src/components/Sidebar.jsx
 import React, { useEffect, useState } from "react";
 import { db } from "../firebase";
 import L from "leaflet";
+import { useMapContext } from "../context/MapContext";
 
 export default function Sidebar() {
   const [users, setUsers] = useState({});
   const [positions, setPositions] = useState({});
   const [zones, setZones] = useState({});
+  const [gpsDevice, setGpsDevice] = useState(null);
+  const { setFocusedUser } = useMapContext();
 
   // Fetch profiles and zones
   useEffect(() => {
-    const usersRef = db.ref("users");
-    usersRef.once("value", (snap) => setUsers(snap.val() || {}));
-
+    db.ref("users").once("value", (snap) => setUsers(snap.val() || {}));
     const zonesRef = db.ref("zones");
     zonesRef.on("value", (snap) => setZones(snap.val() || {}));
     return () => zonesRef.off();
   }, []);
 
-  // Subscribe to positions
+  // Listen to /positions
   useEffect(() => {
     const posRef = db.ref("positions");
 
     const handleAddOrChange = (snap) => {
-      const { lat, lng, ts } = snap.val() || {};
-      setPositions((prev) => ({ ...prev, [snap.key]: { lat, lng, ts } }));
+      const { lat, lng } = snap.val() || {};
+      setPositions((prev) => ({ ...prev, [snap.key]: { lat, lng } }));
     };
 
     const handleRemove = (snap) => {
@@ -45,58 +45,104 @@ export default function Sidebar() {
     };
   }, []);
 
-  // Build entries with outside flag
+  // Listen to /GPS
+  useEffect(() => {
+    const gpsRef = db.ref("GPS");
+    gpsRef.on("value", (snap) => {
+      const data = snap.val();
+      console.log(data);
+      if (data?.Latitude != null && data?.Longitude != null) {
+        setGpsDevice({
+          lat: parseFloat(data.Latitude),
+          lng: parseFloat(data.Longitude),
+        });
+      } else {
+        setGpsDevice(null);
+      }
+    });
+    return () => db.ref("GPS").off();
+  }, []);
+
+  // Build regular tracked entries
   const entries = Object.entries(positions)
     .map(([uid, pos]) => {
       const profile = users[uid] || {};
-      // must have email and not be admin
       if (profile.role === "admin") return null;
-      // check if inside any zone
-      const inside = Object.values(zones).some((zone) => {
-        const dist = L.latLng(pos.lat, pos.lng).distanceTo(
-          L.latLng(zone.center.lat, zone.center.lng)
-        );
-        return dist <= zone.radius;
-      });
+
+      const hasZones = Object.keys(zones).length > 0;
+      let isOutside = false;
+
+      if (hasZones) {
+        isOutside = !Object.values(zones).some((zone) => {
+          const dist = L.latLng(pos.lat, pos.lng).distanceTo(
+            L.latLng(zone.center.lat, zone.center.lng)
+          );
+          return dist <= zone.radius;
+        });
+      }
 
       return {
         uid,
-        email: profile.email,
+        email: profile.email || "Unknown User",
         lat: pos.lat,
         lng: pos.lng,
-        ts: pos.ts,
-        outside: !inside,
+        outside: hasZones ? isOutside : false,
       };
     })
-    .filter(Boolean)
-    // sort by timestamp desc
-    .sort((a, b) => b.ts - a.ts);
-
+    .filter(Boolean);
+  console.log("Tracked Users:", gpsDevice);
   return (
     <div className="border-end" style={{ width: 250 }}>
       <div className="p-3 bg-light">
-        <h5 className="mb-0">Active Tracked Users</h5>
+        <h5 className="mb-0">Tracked Users</h5>
       </div>
       <ul
         className="list-group list-group-flush overflow-auto"
         style={{ maxHeight: "calc(100vh - 56px)" }}
       >
-        {entries.map(({ uid, email, lat, lng, ts, outside }) => (
+        {/* GPS Device Entry */}
+        {gpsDevice && (
+          <li
+            className="list-group-item d-flex flex-column bg-info text-white"
+            style={{ cursor: "pointer" }}
+            onClick={() =>
+              setFocusedUser({
+                uid: "gps_device",
+                lat: gpsDevice.lat,
+                lng: gpsDevice.lng,
+              })
+            }
+          >
+            <strong>GPS Device</strong>
+            <small>
+              Lat: {gpsDevice.lat.toFixed(5)}, Lng: {gpsDevice.lng.toFixed(5)}
+            </small>
+          </li>
+        )}
+
+        {/* Dynamic users from /positions */}
+        {entries.map(({ uid, email, lat, lng, outside }) => (
           <li
             key={uid}
             className={`list-group-item d-flex flex-column ${
               outside ? "bg-danger text-white" : ""
             }`}
+            style={{ cursor: "pointer" }}
+            onClick={() => {
+              if (lat != null && lng != null) {
+                setFocusedUser({ uid, lat, lng });
+              }
+            }}
           >
             <strong>{email}</strong>
             <small>
-              Lat: {lat.toFixed(5)}, Lng: {lng.toFixed(5)}
+              Lat: {lat?.toFixed(5) ?? "N/A"}, Lng: {lng?.toFixed(5) ?? "N/A"}
             </small>
-            <small>{new Date(ts).toLocaleTimeString()}</small>
           </li>
         ))}
-        {entries.length === 0 && (
-          <li className="list-group-item text-muted">No active users.</li>
+
+        {entries.length === 0 && !gpsDevice && (
+          <li className="list-group-item text-muted">No tracked users.</li>
         )}
       </ul>
     </div>

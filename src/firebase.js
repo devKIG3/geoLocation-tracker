@@ -4,14 +4,15 @@ import "firebase/compat/auth";
 import "firebase/compat/database";
 
 const config = {
-  apiKey: "AIzaSyAKqkQ8ly2Zua2DLfom68bk-WWbAKASmjw",
-  authDomain: "geolocation-6475b.firebaseapp.com",
+  apiKey: "AIzaSyBGUd_cVA_rTiwMOKu4I4OC0_gN6zYqTYc",
+  authDomain: "geolocation-197f3.firebaseapp.com",
   databaseURL:
-    "https://geolocation-6475b-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "geolocation-6475b",
-  storageBucket: "geolocation-6475b.appspot.com",
-  messagingSenderId: "431737859613",
-  appId: "1:431737859613:web:2aacedb6b9c0a64b9960f4",
+    "https://geolocation-197f3-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "geolocation-197f3",
+  storageBucket: "geolocation-197f3.firebasestorage.app",
+  messagingSenderId: "821542586449",
+  appId: "1:821542586449:web:a89850544e736d82081070",
+  measurementId: "G-BM2VJGVT8C",
 };
 
 firebase.initializeApp(config);
@@ -21,3 +22,25 @@ firebase
   .catch((err) => console.error("Auth Persistence error:", err));
 export const auth = firebase.auth();
 export const db = firebase.database();
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// // Your web app's Firebase configuration
+// // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+// const firebaseConfig = {
+//   apiKey: "AIzaSyBGUd_cVA_rTiwMOKu4I4OC0_gN6zYqTYc",
+//   authDomain: "geolocation-197f3.firebaseapp.com",
+//   databaseURL: "https://geolocation-197f3-default-rtdb.europe-west1.firebasedatabase.app",
+//   projectId: "geolocation-197f3",
+//   storageBucket: "geolocation-197f3.firebasestorage.app",
+//   messagingSenderId: "821542586449",
+//   appId: "1:821542586449:web:a89850544e736d82081070",
+//   measurementId: "G-BM2VJGVT8C"
+// };
+
+// // Initialize Firebase
+// const app = initializeApp(firebaseConfig);
+// const analytics = getAnalytics(app);

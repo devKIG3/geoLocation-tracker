@@ -1,4 +1,3 @@
-// src/components/MapView.jsx
 import React, { useEffect, useState, useRef } from "react";
 import {
   MapContainer,
@@ -9,18 +8,18 @@ import {
   useMapEvents,
 } from "react-leaflet";
 import L from "leaflet";
-// Fix default marker icon not showing in production (e.g., Vercel)
 import iconUrl from "leaflet/dist/images/marker-icon.png";
 import iconShadowUrl from "leaflet/dist/images/marker-shadow.png";
+import { db } from "../firebase";
+import { toast, ToastContainer } from "react-toastify";
+import "leaflet/dist/leaflet.css";
+import "react-toastify/dist/ReactToastify.css";
+import { useMapContext } from "../context/MapContext";
+
 L.Icon.Default.mergeOptions({
   iconUrl,
   shadowUrl: iconShadowUrl,
 });
-
-import { db } from "../firebase";
-import "leaflet/dist/leaflet.css";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 
 /**
  * ZoneEditor: Allows admin to click on the map
@@ -54,10 +53,10 @@ export default function MapView() {
   const [positions, setPositions] = useState({});
   const zonesRef = useRef(db.ref("zones"));
   const usersRef = useRef({});
-  const mapRef = useRef(null);
-  const lastToastRef = useRef({}); // Track last toast timestamp per user
+  const notifRef = useRef(db.ref("notifications"));
+  const lastToastRef = useRef({});
+  const { mapRef, focusedUser } = useMapContext(); // context
 
-  // Fetch user profiles once
   useEffect(() => {
     const usersDbRef = db.ref("users");
     usersDbRef.once("value", (snap) => {
@@ -65,7 +64,6 @@ export default function MapView() {
     });
   }, []);
 
-  // Subscribe to zones
   useEffect(() => {
     const ref = zonesRef.current;
     ref.on("value", (snap) => {
@@ -74,25 +72,21 @@ export default function MapView() {
     return () => ref.off();
   }, []);
 
-  // Subscribe to positions and detect exits only when outside all zones
   useEffect(() => {
     const posRef = db.ref("positions");
-    const notifRef = db.ref("notifications");
 
     const handlePos = (snap) => {
-      const { lat, lng, ts } = snap.val() || {};
+      const { lat, lng } = snap.val() || {};
       const uid = snap.key;
-      // Always update positions
-      setPositions((prev) => ({ ...prev, [uid]: { lat, lng, ts } }));
+      if (lat == null || lng == null) return;
+
+      setPositions((prev) => ({ ...prev, [uid]: { lat, lng } }));
 
       const profile = usersRef.current[uid] || {};
-      // Skip admins and entries without email
       if (profile.role === "admin" || !profile.email) return;
 
-      // If no zones defined, skip toast behavior
       if (Object.keys(zones).length === 0) return;
 
-      // Check if user is inside any zone
       let insideAny = false;
       Object.values(zones).forEach((zone) => {
         const dist = L.latLng(lat, lng).distanceTo(
@@ -101,19 +95,13 @@ export default function MapView() {
         if (dist <= zone.radius) insideAny = true;
       });
 
-      // If user is outside ALL zones, maybe toast
       if (!insideAny) {
         const now = Date.now();
         const last = lastToastRef.current[uid] || 0;
-        // Only toast if last toast was over 30s ago
-        if (now - last > 30_000) {
-          toast.warning(
-            `🚨 ${profile.email} is outside all zones as of ${new Date(
-              ts
-            ).toLocaleTimeString()}`
-          );
+        if (now - last > 30000) {
+          toast.warning(`🚨 ${profile.email} is outside all zones`);
           lastToastRef.current[uid] = now;
-          notifRef.push({ userId: uid, ts: now });
+          notifRef.current.push({ userId: uid, ts: now });
         }
       }
     };
@@ -136,6 +124,34 @@ export default function MapView() {
       posRef.off("child_removed", handleRemove);
     };
   }, [zones]);
+
+  useEffect(() => {
+    const gpsRef = db.ref("GPS");
+
+    const handleGPS = (snap) => {
+      const data = snap.val();
+      if (data?.Latitude && data?.Longitude) {
+        const lat = parseFloat(data.Latitude);
+        const lng = parseFloat(data.Longitude);
+        setPositions((prev) => ({
+          ...prev,
+          gps_user: { lat, lng },
+        }));
+      }
+    };
+
+    gpsRef.on("value", handleGPS);
+    return () => gpsRef.off("value", handleGPS);
+  }, []);
+
+  // Center on focused user
+  useEffect(() => {
+    if (focusedUser && mapRef.current && focusedUser.lat && focusedUser.lng) {
+      mapRef.current.setView([focusedUser.lat, focusedUser.lng], 16, {
+        animate: true,
+      });
+    }
+  }, [focusedUser]);
 
   return (
     <>
@@ -173,16 +189,14 @@ export default function MapView() {
         {Object.entries(positions)
           .filter(([uid]) => {
             const prof = usersRef.current[uid] || {};
-            return prof.email && prof.role !== "admin";
+            return uid === "gps_user" || (prof.email && prof.role !== "admin");
           })
-          .map(([uid, { lat, lng, ts }]) => (
+          .map(([uid, { lat, lng }]) => (
             <Marker key={uid} position={[lat, lng]}>
               <Popup>
-                <strong>{usersRef.current[uid].email}</strong>
+                <strong>{usersRef.current[uid]?.email || "GPS Device"}</strong>
                 <br />
                 Lat: {lat.toFixed(5)}, Lng: {lng.toFixed(5)}
-                <br />
-                <small>{new Date(ts).toLocaleTimeString()}</small>
               </Popup>
             </Marker>
           ))}

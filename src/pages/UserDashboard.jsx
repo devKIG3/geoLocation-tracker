@@ -5,6 +5,8 @@ import L from "leaflet";
 import { auth, db } from "../firebase";
 import { useNavigate } from "react-router-dom";
 import SessionTracker from "../components/sessionTracker";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import "leaflet/dist/leaflet.css";
 
 // Ensure default marker icon loads in production
@@ -18,7 +20,7 @@ L.Icon.Default.mergeOptions({
 });
 
 export default function UserDashboard() {
-  const [pos, setPos] = useState({ lat: 36.75, lng: 3.04, ts: Date.now() });
+  const [pos, setPos] = useState({});
   const mapRef = useRef();
   const nav = useNavigate();
 
@@ -27,6 +29,7 @@ export default function UserDashboard() {
     if (!user) return nav("/login");
 
     const ref = db.ref(`positions/${user.uid}`);
+
     // Listen for own position
     ref.on("value", (snap) => {
       if (snap.exists()) setPos(snap.val());
@@ -37,19 +40,26 @@ export default function UserDashboard() {
       (p) => {
         const lat = p.coords.latitude;
         const lng = p.coords.longitude;
-        const ts = Date.now();
-        ref.set({ lat, lng, ts });
+        ref.set({ lat, lng });
       },
-      console.error,
+      () => {
+        toast.error("Can't get coordinates.");
+      },
       { enableHighAccuracy: true }
     );
 
     return () => {
-      // Cleanup watch and DB listener
       navigator.geolocation.clearWatch(watcher);
       ref.off();
     };
   }, [nav]);
+
+  // Auto-center map on user position change
+  useEffect(() => {
+    if (mapRef.current && pos.lat && pos.lng) {
+      mapRef.current.setView([pos.lat, pos.lng]);
+    }
+  }, [pos]);
 
   // Logout: remove position then sign out
   const onLogout = () => {
@@ -75,6 +85,7 @@ export default function UserDashboard() {
   return (
     <>
       <SessionTracker />
+      <ToastContainer />
       <div className="d-flex flex-column vh-100">
         <nav className="navbar navbar-dark bg-dark">
           <span className="navbar-text text-white">
@@ -85,21 +96,21 @@ export default function UserDashboard() {
           </button>
         </nav>
 
-        <MapContainer
-          center={[pos.lat, pos.lng]}
-          zoom={13}
-          whenCreated={(map) => (mapRef.current = map)}
-          className="flex-grow-1"
-        >
-          <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-          <Marker position={[pos.lat, pos.lng]}>
-            <Popup>
-              <strong>Your Position</strong>
-              <br />
-              {new Date(pos.ts).toLocaleString()}
-            </Popup>
-          </Marker>
-        </MapContainer>
+        {pos.lat && pos.lng && (
+          <MapContainer
+            center={[pos.lat, pos.lng]}
+            zoom={13}
+            whenCreated={(map) => (mapRef.current = map)}
+            className="flex-grow-1"
+          >
+            <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+            <Marker position={[pos.lat, pos.lng]}>
+              <Popup>
+                <strong>Your Position</strong>
+              </Popup>
+            </Marker>
+          </MapContainer>
+        )}
       </div>
     </>
   );
