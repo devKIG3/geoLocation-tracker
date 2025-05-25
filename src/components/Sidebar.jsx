@@ -88,7 +88,7 @@ export default function Sidebar() {
 
       return {
         uid,
-        email: uid === "gps_device" ? "ISRA" : profile.email || "Unknown User",
+        email: uid === "gps_device" ? "GPS" : profile.email.split('@')[0] || "Unknown User",
         lat: pos.lat,
         lng: pos.lng,
         outside: hasZones ? isOutside : false,

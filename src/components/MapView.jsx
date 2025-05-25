@@ -95,7 +95,7 @@ export default function MapView() {
         if (now - last > 30000) {
           toast.warning(
             `🚨 ${
-              profile.email === "gps.device@tracker.local" ? "ISRA" : profile.email
+              profile.email === "gps.device@tracker.local" ? "GPS" : profile.email.split('@')[0]
             } is outside all zones`
           );
           lastToastRef.current[uid] = now;
@@ -230,7 +230,7 @@ export default function MapView() {
           .map(([uid, { lat, lng }]) => (
             <Marker key={uid} position={[lat, lng]}>
               <Popup>
-                <strong>{usersRef.current[uid]?.email || "ISRA"}</strong>
+                <strong>{usersRef.current[uid]?.email.split('@')[0] || "GPS"}</strong>
                 <br />
                 Lat: {lat.toFixed(5)}, Lng: {lng.toFixed(5)}
               </Popup>
