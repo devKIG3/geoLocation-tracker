@@ -85,10 +85,9 @@ export default function Sidebar() {
           return dist <= zone.radius;
         });
       }
-
       return {
         uid,
-        email: uid === "gps_device" ? "GPS" : profile.email.split('@')[0] || "Unknown User",
+        email: uid === "gps_device" ? "GPS" : String(profile.email).split('@')[0] || "Unknown User",
         lat: pos.lat,
         lng: pos.lng,
         outside: hasZones ? isOutside : false,
